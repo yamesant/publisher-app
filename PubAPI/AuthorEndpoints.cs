@@ -21,7 +21,7 @@ public static class AuthorEndpoints
         {
             return await db.Authors.AsNoTracking()
                 .Where(model => model.AuthorId == authorid)
-                .Select(a => new AuthorDTO(a.AuthorId, a.FirstName, a.LastName))
+                .Select(a => new AuthorDTO(a.AuthorId, a.Name.FirstName, a.Name.LastName))
                 .FirstOrDefaultAsync()
                 is AuthorDTO model
                     ? TypedResults.Ok(model)
@@ -37,8 +37,8 @@ public static class AuthorEndpoints
               .Where(model => model.AuthorId == authorid)
               .ExecuteUpdateAsync(setters => setters
                   //.SetProperty(m => m.AuthorId, authorDTO.AuthorId)
-                  .SetProperty(m => m.FirstName, authorDTO.FirstName)
-                  .SetProperty(m => m.LastName, authorDTO.LastName)
+                  .SetProperty(m => m.Name.FirstName, authorDTO.FirstName)
+                  .SetProperty(m => m.Name.LastName, authorDTO.LastName)
                   );
           return affected == 1 ? TypedResults.Ok() : TypedResults.NotFound();
       })
@@ -47,11 +47,11 @@ public static class AuthorEndpoints
 
         group.MapPost("/", async (AuthorDTO authorDTO, PubContext db) =>
         {
-            var author = new Author { FirstName = authorDTO.FirstName, LastName = authorDTO.LastName };
+            var author = new Author { Name = new PersonName { FirstName = authorDTO.FirstName, LastName = authorDTO.LastName }};
             db.Authors.Add(author);
             await db.SaveChangesAsync();
             return TypedResults.Created($"/api/Author/{author.AuthorId}",
-                new AuthorDTO(author.AuthorId, author.FirstName, author.LastName));
+                new AuthorDTO(author.AuthorId, author.Name.FirstName, author.Name.LastName));
         })
         .WithName("CreateAuthor")
         .WithOpenApi();
